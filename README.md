@@ -1,5 +1,6 @@
 # auth-service
 
+```text
 register
    ↓
 login
@@ -20,3 +21,4 @@ admin → 200
 logout
    ↓
 refresh token revoked
+```
