@@ -1,24 +1,24 @@
 import { Controller, Get, Delete, Patch, Param, Body } from '@nestjs/common';
-import { UsersService } from '../users/users.service';
+import { AdminService } from './admin.service';
 import { RoleDto } from '../users/dto/role.dto';
 
 @Controller('admin')
 export class AdminController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(private readonly adminService: AdminService) {}
 
   @Get('users')
   getAllUsers() {
-    return this.usersService.getAllUsers();
+    return this.adminService.getAllUsers();
   }
 
   @Delete('users/:id')
   deleteUser(@Param('id') id: string) {
-    return this.usersService.deleteUser(id);
+    return this.adminService.deleteUser(id);
   }
 
   @Patch('users/:id/roles')
   updateUserRoles(@Param('id') id: string, @Body() body: { roles: RoleDto[] }) {
     // Expect body.roles = RoleDto[]
-    return this.usersService.updateUserRoles(id, body.roles);
+    return this.adminService.updateUserRoles(id, body.roles);
   }
 }

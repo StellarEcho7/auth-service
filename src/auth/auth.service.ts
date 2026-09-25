@@ -6,22 +6,26 @@ import { AuthRepository } from './auth.repository';
 export class AuthService {
   constructor(private readonly authRepository: AuthRepository) {}
 
-  register(dto: RegisterDto) {
+  register(_dto: RegisterDto) {
+    void _dto;
     // TODO: add registration logic using AuthRepository
     return { message: 'Register service (not implemented)' };
   }
 
-  login(payload: any) {
+  login(_payload: any) {
+    void _payload;
     // TODO: login logic
     return { message: 'Login service (not implemented)' };
   }
 
-  refresh(payload: any) {
+  refresh(_payload: any) {
+    void _payload;
     // TODO: refresh logic
     return { message: 'Refresh service (not implemented)' };
   }
 
-  logout(payload: any) {
+  logout(_payload: any) {
+    void _payload;
     // TODO: logout logic
     return { message: 'Logout service (not implemented)' };
   }
