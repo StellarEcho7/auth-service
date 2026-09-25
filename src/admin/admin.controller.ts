@@ -1,22 +1,24 @@
 import { Controller, Get, Delete, Patch, Param, Body } from '@nestjs/common';
+import { UsersService } from '../users/users.service';
+import { RoleDto } from '../users/dto/role.dto';
 
 @Controller('admin')
 export class AdminController {
+  constructor(private readonly usersService: UsersService) {}
+
   @Get('users')
   getAllUsers() {
-    // TODO: list all users for admin
-    return { message: 'Admin users list (not implemented)' };
+    return this.usersService.getAllUsers();
   }
 
   @Delete('users/:id')
   deleteUser(@Param('id') id: string) {
-    // TODO: delete user by id
-    return { message: `Delete user ${id} (not implemented)` };
+    return this.usersService.deleteUser(id);
   }
 
   @Patch('users/:id/roles')
-  updateUserRoles(@Param('id') id: string, @Body() body: any) {
-    // TODO: update user roles
-    return { message: `Update roles for user ${id} (not implemented)` };
+  updateUserRoles(@Param('id') id: string, @Body() body: { roles: RoleDto[] }) {
+    // Expect body.roles = RoleDto[]
+    return this.usersService.updateUserRoles(id, body.roles);
   }
 }
