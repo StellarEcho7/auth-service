@@ -23,6 +23,16 @@ logout
 refresh token revoked
 ```
 
+POST   /auth/register
+POST   /auth/login
+POST   /auth/refresh
+POST   /auth/logout
+
+GET    /users/me
+
+GET    /admin/users
+DELETE /admin/users/:id
+
 <p align="center">
   <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
 </p>
