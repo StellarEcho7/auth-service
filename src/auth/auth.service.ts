@@ -1,15 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import { RegisterDto } from './dto/register.dto';
-import { AuthRepository } from './auth.repository';
+import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly authRepository: AuthRepository) {}
+  constructor(private readonly usersService: UsersService) {}
 
-  register(_dto: RegisterDto) {
-    void _dto;
-    // TODO: add registration logic using AuthRepository
-    return { message: 'Register service (not implemented)' };
+  async register(dto: RegisterDto) {
+    const user = await this.usersService.create({
+      email: dto.email,
+      password: dto.password,
+    });
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password, ...safe } = user; // Omit password hash from response
+    return safe;
   }
 
   login(_payload: any) {

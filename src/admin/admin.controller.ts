@@ -1,6 +1,6 @@
 import { Controller, Get, Delete, Patch, Param, Body } from '@nestjs/common';
 import { AdminService } from './admin.service';
-import { RoleDto } from '../users/dto/role.dto';
+import { RoleName } from '../users/dto/role.dto';
 
 @Controller('admin')
 export class AdminController {
@@ -17,8 +17,11 @@ export class AdminController {
   }
 
   @Patch('users/:id/roles')
-  updateUserRoles(@Param('id') id: string, @Body() body: { roles: RoleDto[] }) {
-    // Expect body.roles = RoleDto[]
+  updateUserRoles(
+    @Param('id') id: string,
+    @Body() body: { roles: RoleName[] },
+  ) {
+    // Expect body.roles = RoleName[]
     return this.adminService.updateUserRoles(id, body.roles);
   }
 }
