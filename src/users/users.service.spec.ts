@@ -172,4 +172,65 @@ describe('UsersService', () => {
       await expect(repository.findById(admin.id)).resolves.toBeNull();
     });
   });
+
+  describe('getById', () => {
+    it('returns the stored user', async () => {
+      const user = await getSeedUser();
+
+      await expect(service.getById(user.id)).resolves.toEqual(user);
+    });
+
+    it('returns null for an unknown id', async () => {
+      await expect(service.getById('missing')).resolves.toBeNull();
+    });
+  });
+
+  describe('getMe', () => {
+    it('maps the authenticated user to the public shape', () => {
+      const result = service.getMe({
+        id: 'user-id',
+        email: 'user@example.com',
+        roles: [RoleName.USER],
+      });
+
+      expect(result).toEqual({
+        id: 'user-id',
+        email: 'user@example.com',
+        roles: [RoleName.USER],
+      });
+      expect(result).not.toHaveProperty('passwordHash');
+    });
+  });
+
+  describe('ensureBootstrapAdmin', () => {
+    it('does nothing when an admin already exists', async () => {
+      await repository.create({
+        email: 'admin@example.com',
+        passwordHash: 'hash',
+        roles: [RoleName.ADMIN],
+      });
+      const createSpy = jest.spyOn(repository, 'create');
+
+      await service.ensureBootstrapAdmin('new@example.com', 'secret');
+
+      expect(createSpy).not.toHaveBeenCalled();
+    });
+
+    it('promotes an existing user when no admin exists', async () => {
+      await service.ensureBootstrapAdmin('user@example.com', 'secret');
+
+      const user = await getSeedUser();
+      expect(user.roles).toContain(RoleName.ADMIN);
+    });
+
+    it('creates an admin when no admin or user exists', async () => {
+      mockedArgon2.hash.mockResolvedValue('bootstrap-hash');
+
+      await service.ensureBootstrapAdmin('admin@example.com', 'secret');
+
+      const created = await repository.findByEmail('admin@example.com');
+      expect(created?.roles).toEqual([RoleName.ADMIN]);
+      expect(created?.passwordHash).toBe('bootstrap-hash');
+    });
+  });
 });

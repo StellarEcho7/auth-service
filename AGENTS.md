@@ -14,6 +14,7 @@ HTTP surface:
 
 - **User** — `id` (UUID), `email` (unique, normalized), `passwordHash` (Argon2), `roles`.
 - **Roles** — `RoleName.USER` (default) and `RoleName.ADMIN`; role checks separate user endpoints from admin ones.
+- **Sessions** — a short-lived access JWT plus an opaque refresh token. Only the SHA-256 hash of the refresh token is stored; refresh rotates it, logout revokes it, and reuse revokes the whole token family.
 - Plaintext passwords exist only at the HTTP boundary. They are hashed before persistence and never leave the service.
 
 ## Architecture
@@ -29,10 +30,13 @@ Inside a module the layering is **Controller → Service → Repository**: contr
 Global wiring lives in `main.ts` / `app.module.ts`:
 
 - `ValidationPipe` with `whitelist` + `transform` (drops unknown fields, converts payloads).
-- `DuplicateEmailFilter` registered via `APP_FILTER` (domain error → HTTP 409).
-- `ThrottlerGuard` registered via `APP_GUARD`.
+- Global `ConfigModule` (`isGlobal`) and `JwtModule` (access secret/TTL from env).
+- Domain-error filters registered via `APP_FILTER` (duplicate email, invalid credentials, invalid refresh token, user not found, last admin, self-delete).
+- Guards registered via `APP_GUARD`, in order: `ThrottlerGuard` → `JwtAuthGuard` → `RolesGuard`.
+- `JwtAuthGuard` is global and secure-by-default: routes opt out with `@Public()`, the access token must have `type: 'access'`, and the user is re-resolved from `UsersService` on every request so role changes and deletions apply immediately.
+- `RolesGuard` enforces `@Roles(...)` metadata from the freshly resolved user.
 
-`UsersModule` exports `UsersService` and `UsersRepository`; other modules import it. There must be exactly one repository instance — never provide `UsersRepository` elsewhere.
+`UsersModule` exports `UsersService` and `UsersRepository`; other modules import it. There must be exactly one repository instance — never provide `UsersRepository` elsewhere. It also owns the startup bootstrap that promotes/creates the first admin from `BOOTSTRAP_ADMIN_EMAIL` / `BOOTSTRAP_ADMIN_PASSWORD` when no admin exists.
 
 ## How a request flows
 
@@ -57,10 +61,11 @@ Registration is the reference path; new features should follow the same shape:
 - **Uniqueness belongs to the repository.** `UsersRepository.create` is the authority; the service pre-check only avoids wasted hashing and must not replace it.
 - **`id` is generated in the repository.**
 - **The default `USER` role is assigned in `UsersService.create`.**
+- **Access tokens are JWTs; refresh tokens are opaque.** Never store a plaintext refresh token — hash it. Never trust access-token claims for authorization without re-resolving the user.
 - **Validation lives in DTOs** via `class-validator`; do not validate in controllers.
 - **Throw domain errors**, map them to HTTP in `APP_FILTER` providers; do not use `try/catch` in controllers.
 - **All persistence goes through `UsersRepository`.**
-- **Rate limits stay on**: 100 req/min globally, 10 req/min for registration.
+- **Rate limits stay on**: 100 req/min globally; 10 req/min for registration and login; 20 req/min for refresh and logout.
 
 ## Code conventions
 

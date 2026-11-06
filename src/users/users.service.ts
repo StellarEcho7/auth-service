@@ -16,13 +16,12 @@ export class UsersService {
 
   constructor(private readonly usersRepository: UsersRepository) {}
 
-  getMe(): Promise<UserResponseDto> {
-    // Placeholder: In a real app you would get the user from the request/context
-    return Promise.resolve({
-      id: 'dummy-id',
-      email: 'dummy@example.com',
-      roles: [],
-    });
+  getMe(user: Pick<UserDto, 'id' | 'email' | 'roles'>): UserResponseDto {
+    return toUserResponse(user);
+  }
+
+  async getById(id: string): Promise<UserDto | null> {
+    return this.usersRepository.findById(id);
   }
 
   async getAllUsers(): Promise<UserResponseDto[]> {
@@ -89,6 +88,27 @@ export class UsersService {
     } catch {
       return null;
     }
+  }
+
+  async ensureBootstrapAdmin(email: string, password: string): Promise<void> {
+    const admins = await this.usersRepository.countByRole(RoleName.ADMIN);
+    if (admins > 0) {
+      return;
+    }
+
+    const existing = await this.usersRepository.findByEmail(email);
+    if (existing) {
+      const roles = Array.from(new Set([...existing.roles, RoleName.ADMIN]));
+      await this.usersRepository.updateRoles(existing.id, roles);
+      return;
+    }
+
+    const passwordHash = await argon2.hash(password);
+    await this.usersRepository.create({
+      email,
+      passwordHash,
+      roles: [RoleName.ADMIN],
+    });
   }
 
   private async assertNotLastAdmin(

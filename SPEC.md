@@ -1,8 +1,8 @@
 # Deferred Admin Work (requires JWT authentication)
 
-The admin module core is implemented (validation, 404/409 handling, idempotent delete, last-admin protection). The tasks below were intentionally postponed until the `Access JWT + refresh` flow exists. They are specifications, not tests.
+The admin module core is implemented (validation, 404/409 handling, idempotent delete, last-admin protection). The tasks below were postponed until the `Access JWT + refresh` flow existed; they are now implemented and covered by unit tests plus `test/app.e2e-spec.ts`.
 
-## 8. Protect admin routes with RBAC
+## 8. Protect admin routes with RBAC — implemented
 
 - Register global `JwtAuthGuard` and `RolesGuard` via `APP_GUARD` once access tokens are issued.
 - Add `@Roles(RoleName.ADMIN)` at the class level of `AdminController`.
@@ -15,7 +15,7 @@ The admin module core is implemented (validation, 404/409 handling, idempotent d
 - Authenticated `USER` request to `/admin/*` → `403`.
 - Authenticated `ADMIN` request to `/admin/*` → expected `2xx`.
 
-## 9. Prevent an admin from deleting themselves
+## 9. Prevent an admin from deleting themselves — implemented
 
 - Change `AdminService.deleteUser` to accept the acting user id: `deleteUser(actorId, targetId)`.
 - Throw `CannotDeleteSelfError` (map to `403 Forbidden` with a global `APP_FILTER`) when `actorId === targetId`.
@@ -27,7 +27,7 @@ The admin module core is implemented (validation, 404/409 handling, idempotent d
 - Admin deleting another user/admin → `204`.
 - The existing last-admin rule still returns `409`.
 
-## 10. Invalidate refresh tokens for deleted users
+## 10. Invalidate refresh tokens for deleted users — implemented
 
 - `POST /auth/refresh` must verify that the user referenced by the refresh-token record still exists (via `UsersService.getById` / repository lookup) before issuing new tokens.
 - Optionally revoke the user's refresh-token family when the user is deleted.
@@ -42,4 +42,5 @@ The admin module core is implemented (validation, 404/409 handling, idempotent d
 ## Notes
 
 - Admin core (items 1–7) is complete: `UpdateUserRolesDto`, `ParseUUIDPipe`, idempotent `DELETE` (`204`), `PATCH` returns `UserResponseDto`, `UserNotFoundError` → `404`, `LastAdminError` → `409`.
+- The token layer is complete: access JWT (`type: 'access'`), opaque rotating refresh tokens hashed at rest, `JwtAuthGuard` re-resolving the user per request, `RolesGuard`, `@Public()`, `@CurrentUser()`, and `BootstrapAdminService`.
 - Keep the existing pattern when adding new domain errors: error class in the domain folder plus a global `APP_FILTER` mapping it to HTTP.

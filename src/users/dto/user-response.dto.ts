@@ -13,7 +13,9 @@ export class UserResponseDto {
   roles: RoleName[];
 }
 
-export function toUserResponse(user: UserDto): UserResponseDto {
+export function toUserResponse(
+  user: Pick<UserDto, 'id' | 'email' | 'roles'>,
+): UserResponseDto {
   return plainToInstance(UserResponseDto, user, {
     excludeExtraneousValues: true,
   });

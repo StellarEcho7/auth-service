@@ -1,6 +1,7 @@
 import { AdminService } from './admin.service';
 import { UsersService } from '../users/users.service';
 import { RoleName } from '../users/dto/role.dto';
+import { CannotDeleteSelfError } from './errors/cannot-delete-self.error';
 
 describe('AdminService', () => {
   const usersService = {
@@ -24,9 +25,16 @@ describe('AdminService', () => {
   it('delegates deletion', async () => {
     usersService.deleteUser.mockResolvedValue(undefined);
 
-    await service.deleteUser('user-id');
+    await service.deleteUser('actor-id', 'target-id');
 
-    expect(usersService.deleteUser).toHaveBeenCalledWith('user-id');
+    expect(usersService.deleteUser).toHaveBeenCalledWith('target-id');
+  });
+
+  it('rejects deleting your own account', async () => {
+    await expect(
+      service.deleteUser('same-id', 'same-id'),
+    ).rejects.toBeInstanceOf(CannotDeleteSelfError);
+    expect(usersService.deleteUser).not.toHaveBeenCalled();
   });
 
   it('delegates role updates and returns the updated user', async () => {
