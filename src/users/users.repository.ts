@@ -6,28 +6,31 @@ import { DuplicateEmailError } from './errors/duplicate-email.error';
 
 @Injectable()
 export class UsersRepository {
-  // In‑memory placeholder store
+  // In‑memory placeholder store – replace with a proper DB later
   private readonly users: UserDto[] = [];
 
   async findAll(): Promise<UserDto[]> {
     await Promise.resolve();
-    return this.users;
+    return [...this.users];
   }
 
   async findByEmail(email: string): Promise<UserDto | null> {
     await Promise.resolve();
-    const user = this.users.find((u) => u.email === email);
-    return user ?? null;
+    const normalized = this.normalizeEmail(email);
+    return this.users.find((u) => u.email === normalized) ?? null;
   }
 
   async create(data: Omit<UserDto, 'id'>): Promise<UserDto> {
-    const existing = await this.findByEmail(data.email);
-    if (existing) {
-      throw new DuplicateEmailError(data.email);
+    // Yield first, then check + insert in one synchronous block to avoid TOCTOU races
+    await Promise.resolve();
+    const email = this.normalizeEmail(data.email);
+    if (this.users.some((u) => u.email === email)) {
+      throw new DuplicateEmailError(email);
     }
     const newUser: UserDto = {
       id: randomUUID(),
       ...data,
+      email,
     };
     this.users.push(newUser);
     return newUser;
@@ -43,5 +46,9 @@ export class UsersRepository {
     await Promise.resolve();
     const user = this.users.find((u) => u.id === id);
     if (user) user.roles = roles;
+  }
+
+  private normalizeEmail(email: string): string {
+    return email.trim().toLowerCase();
   }
 }

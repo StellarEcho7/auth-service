@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
-import { UserDto } from '../users/dto/user.dto';
+import { UserResponseDto } from '../users/dto/user-response.dto';
 import { RoleName } from '../users/dto/role.dto';
 
 @Injectable()
 export class AdminService {
   constructor(private readonly usersService: UsersService) {}
 
-  async getAllUsers(): Promise<UserDto[]> {
+  async getAllUsers(): Promise<UserResponseDto[]> {
     return this.usersService.getAllUsers();
   }
 

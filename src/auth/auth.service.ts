@@ -1,19 +1,21 @@
 import { Injectable } from '@nestjs/common';
 import { RegisterDto } from './dto/register.dto';
 import { UsersService } from '../users/users.service';
+import {
+  UserResponseDto,
+  toUserResponse,
+} from '../users/dto/user-response.dto';
 
 @Injectable()
 export class AuthService {
   constructor(private readonly usersService: UsersService) {}
 
-  async register(dto: RegisterDto) {
+  async register(dto: RegisterDto): Promise<UserResponseDto> {
     const user = await this.usersService.create({
       email: dto.email,
       password: dto.password,
     });
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password, ...safe } = user; // Omit password hash from response
-    return safe;
+    return toUserResponse(user);
   }
 
   login(_payload: any) {
