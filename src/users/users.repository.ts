@@ -14,6 +14,11 @@ export class UsersRepository {
     return [...this.users];
   }
 
+  async findById(id: string): Promise<UserDto | null> {
+    await Promise.resolve();
+    return this.users.find((u) => u.id === id) ?? null;
+  }
+
   async findByEmail(email: string): Promise<UserDto | null> {
     await Promise.resolve();
     const normalized = this.normalizeEmail(email);
@@ -36,16 +41,25 @@ export class UsersRepository {
     return newUser;
   }
 
-  async delete(id: string): Promise<void> {
+  async delete(id: string): Promise<UserDto | null> {
     await Promise.resolve();
     const index = this.users.findIndex((u) => u.id === id);
-    if (index >= 0) this.users.splice(index, 1);
+    if (index < 0) return null;
+    const [removed] = this.users.splice(index, 1);
+    return removed;
   }
 
-  async updateRoles(id: string, roles: RoleName[]): Promise<void> {
+  async updateRoles(id: string, roles: RoleName[]): Promise<UserDto | null> {
     await Promise.resolve();
     const user = this.users.find((u) => u.id === id);
-    if (user) user.roles = roles;
+    if (!user) return null;
+    user.roles = roles;
+    return user;
+  }
+
+  async countByRole(role: RoleName): Promise<number> {
+    await Promise.resolve();
+    return this.users.filter((u) => u.roles.includes(role)).length;
   }
 
   private normalizeEmail(email: string): string {

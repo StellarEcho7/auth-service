@@ -11,14 +11,14 @@ export class AdminService {
     return this.usersService.getAllUsers();
   }
 
-  async deleteUser(id: string): Promise<{ message: string }> {
-    return this.usersService.deleteUser(id);
+  async deleteUser(id: string): Promise<void> {
+    await this.usersService.deleteUser(id);
   }
 
   async updateUserRoles(
     id: string,
     roles: RoleName[],
-  ): Promise<{ message: string }> {
+  ): Promise<UserResponseDto> {
     return this.usersService.updateUserRoles(id, roles);
   }
 }

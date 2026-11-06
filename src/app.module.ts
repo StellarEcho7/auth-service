@@ -8,6 +8,8 @@ import { UsersModule } from './users/users.module';
 import { AdminModule } from './admin/admin.module';
 import { DuplicateEmailFilter } from './filters/duplicate-email.filter';
 import { InvalidCredentialsFilter } from './filters/invalid-credentials.filter';
+import { LastAdminFilter } from './filters/last-admin.filter';
+import { UserNotFoundFilter } from './filters/user-not-found.filter';
 
 @Module({
   imports: [
@@ -21,6 +23,8 @@ import { InvalidCredentialsFilter } from './filters/invalid-credentials.filter';
     AppService,
     { provide: APP_FILTER, useClass: DuplicateEmailFilter },
     { provide: APP_FILTER, useClass: InvalidCredentialsFilter },
+    { provide: APP_FILTER, useClass: UserNotFoundFilter },
+    { provide: APP_FILTER, useClass: LastAdminFilter },
     { provide: APP_GUARD, useClass: ThrottlerGuard },
   ],
 })

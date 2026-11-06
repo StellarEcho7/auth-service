@@ -5,6 +5,8 @@ import { UserResponseDto, toUserResponse } from './dto/user-response.dto';
 import { RoleName } from './dto/role.dto';
 import { CreateUserDto } from './dto/create-user.dto';
 import { DuplicateEmailError } from './errors/duplicate-email.error';
+import { LastAdminError } from './errors/last-admin.error';
+import { UserNotFoundError } from './errors/user-not-found.error';
 import { randomUUID } from 'node:crypto';
 import * as argon2 from 'argon2';
 
@@ -28,17 +30,29 @@ export class UsersService {
     return users.map((user) => toUserResponse(user));
   }
 
-  async deleteUser(id: string): Promise<{ message: string }> {
+  async deleteUser(id: string): Promise<void> {
+    const user = await this.usersRepository.findById(id);
+    if (!user) {
+      return;
+    }
+    await this.assertNotLastAdmin(user, false);
     await this.usersRepository.delete(id);
-    return { message: `User ${id} deleted (not implemented)` };
   }
 
   async updateUserRoles(
     id: string,
     roles: RoleName[],
-  ): Promise<{ message: string }> {
-    await this.usersRepository.updateRoles(id, roles);
-    return { message: `Roles for user ${id} updated (not implemented)` };
+  ): Promise<UserResponseDto> {
+    const user = await this.usersRepository.findById(id);
+    if (!user) {
+      throw new UserNotFoundError(id);
+    }
+    await this.assertNotLastAdmin(user, roles.includes(RoleName.ADMIN));
+    const updated = await this.usersRepository.updateRoles(id, roles);
+    if (!updated) {
+      throw new UserNotFoundError(id);
+    }
+    return toUserResponse(updated);
   }
 
   async create(dto: CreateUserDto): Promise<UserDto> {
@@ -74,6 +88,19 @@ export class UsersService {
       return valid ? user : null;
     } catch {
       return null;
+    }
+  }
+
+  private async assertNotLastAdmin(
+    user: UserDto,
+    keepsAdmin: boolean,
+  ): Promise<void> {
+    if (!user.roles.includes(RoleName.ADMIN) || keepsAdmin) {
+      return;
+    }
+    const admins = await this.usersRepository.countByRole(RoleName.ADMIN);
+    if (admins <= 1) {
+      throw new LastAdminError();
     }
   }
 

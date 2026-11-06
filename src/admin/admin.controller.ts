@@ -1,6 +1,16 @@
-import { Controller, Get, Delete, Patch, Param, Body } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Delete,
+  Patch,
+  Param,
+  Body,
+  ParseUUIDPipe,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
 import { AdminService } from './admin.service';
-import { RoleName } from '../users/dto/role.dto';
+import { UpdateUserRolesDto } from './dto/update-user-roles.dto';
 
 @Controller('admin')
 export class AdminController {
@@ -12,16 +22,16 @@ export class AdminController {
   }
 
   @Delete('users/:id')
-  deleteUser(@Param('id') id: string) {
+  @HttpCode(HttpStatus.NO_CONTENT)
+  deleteUser(@Param('id', new ParseUUIDPipe()) id: string): Promise<void> {
     return this.adminService.deleteUser(id);
   }
 
   @Patch('users/:id/roles')
   updateUserRoles(
-    @Param('id') id: string,
-    @Body() body: { roles: RoleName[] },
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Body() body: UpdateUserRolesDto,
   ) {
-    // Expect body.roles = RoleName[]
     return this.adminService.updateUserRoles(id, body.roles);
   }
 }
