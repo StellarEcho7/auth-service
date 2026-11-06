@@ -10,6 +10,7 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { RolesGuard } from './auth/guards/roles.guard';
 import { UsersModule } from './users/users.module';
 import { AdminModule } from './admin/admin.module';
+import { envValidationSchema } from './config/env.validation';
 import { CannotDeleteSelfFilter } from './filters/cannot-delete-self.filter';
 import { DuplicateEmailFilter } from './filters/duplicate-email.filter';
 import { InvalidCredentialsFilter } from './filters/invalid-credentials.filter';
@@ -19,7 +20,11 @@ import { UserNotFoundFilter } from './filters/user-not-found.filter';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      validationSchema: envValidationSchema,
+      validationOptions: { allowUnknown: true, abortEarly: false },
+    }),
     JwtModule.registerAsync({
       global: true,
       inject: [ConfigService],

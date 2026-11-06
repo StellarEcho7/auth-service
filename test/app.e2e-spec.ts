@@ -18,12 +18,6 @@ interface PublicUser {
   roles: RoleName[];
 }
 
-process.env.JWT_ACCESS_SECRET = 'e2e-access-secret';
-process.env.JWT_ACCESS_TTL_SECONDS = '900';
-process.env.REFRESH_TOKEN_TTL_DAYS = '7';
-process.env.BOOTSTRAP_ADMIN_EMAIL = 'admin@example.com';
-process.env.BOOTSTRAP_ADMIN_PASSWORD = 'admin-secret';
-
 describe('AppController (e2e)', () => {
   let app: INestApplication<App>;
 

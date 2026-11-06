@@ -30,7 +30,7 @@ Inside a module the layering is **Controller → Service → Repository**: contr
 Global wiring lives in `main.ts` / `app.module.ts`:
 
 - `ValidationPipe` with `whitelist` + `transform` (drops unknown fields, converts payloads).
-- Global `ConfigModule` (`isGlobal`) and `JwtModule` (access secret/TTL from env).
+- Global `ConfigModule` (`isGlobal`) validates the environment with a Joi schema in `src/config/env.validation.ts` and fails fast; `JwtModule` reads the access secret/TTL from the validated config.
 - Domain-error filters registered via `APP_FILTER` (duplicate email, invalid credentials, invalid refresh token, user not found, last admin, self-delete).
 - Guards registered via `APP_GUARD`, in order: `ThrottlerGuard` → `JwtAuthGuard` → `RolesGuard`.
 - `JwtAuthGuard` is global and secure-by-default: routes opt out with `@Public()`, the access token must have `type: 'access'`, and the user is re-resolved from `UsersService` on every request so role changes and deletions apply immediately.
