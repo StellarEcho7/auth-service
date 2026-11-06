@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { RegisterDto } from './dto/register.dto';
+import { LoginDto } from './dto/login.dto';
+import { InvalidCredentialsError } from './errors/invalid-credentials.error';
 import { UsersService } from '../users/users.service';
 import {
   UserResponseDto,
@@ -18,10 +20,15 @@ export class AuthService {
     return toUserResponse(user);
   }
 
-  login(_payload: any) {
-    void _payload;
-    // TODO: login logic
-    return { message: 'Login service (not implemented)' };
+  async login(dto: LoginDto): Promise<UserResponseDto> {
+    const user = await this.usersService.verifyCredentials(
+      dto.email,
+      dto.password,
+    );
+    if (!user) {
+      throw new InvalidCredentialsError();
+    }
+    return toUserResponse(user);
   }
 
   refresh(_payload: any) {

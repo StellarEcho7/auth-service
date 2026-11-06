@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { AdminModule } from './admin/admin.module';
 import { DuplicateEmailFilter } from './filters/duplicate-email.filter';
+import { InvalidCredentialsFilter } from './filters/invalid-credentials.filter';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { DuplicateEmailFilter } from './filters/duplicate-email.filter';
   providers: [
     AppService,
     { provide: APP_FILTER, useClass: DuplicateEmailFilter },
+    { provide: APP_FILTER, useClass: InvalidCredentialsFilter },
     { provide: APP_GUARD, useClass: ThrottlerGuard },
   ],
 })

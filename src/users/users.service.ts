@@ -5,10 +5,13 @@ import { UserResponseDto, toUserResponse } from './dto/user-response.dto';
 import { RoleName } from './dto/role.dto';
 import { CreateUserDto } from './dto/create-user.dto';
 import { DuplicateEmailError } from './errors/duplicate-email.error';
+import { randomUUID } from 'node:crypto';
 import * as argon2 from 'argon2';
 
 @Injectable()
 export class UsersService {
+  private dummyHash: Promise<string> | null = null;
+
   constructor(private readonly usersRepository: UsersRepository) {}
 
   getMe(): Promise<UserResponseDto> {
@@ -50,5 +53,32 @@ export class UsersService {
       passwordHash: hashed,
       roles: [RoleName.USER],
     });
+  }
+
+  async verifyCredentials(
+    email: string,
+    password: string,
+  ): Promise<UserDto | null> {
+    const user = await this.usersRepository.findByEmail(email);
+
+    if (!user) {
+      // Verify against a dummy hash so unknown emails take the same time as
+      // wrong passwords and cannot be distinguished by response timing.
+      const dummyHash = await this.getDummyHash();
+      await argon2.verify(dummyHash, password).catch(() => false);
+      return null;
+    }
+
+    try {
+      const valid = await argon2.verify(user.passwordHash, password);
+      return valid ? user : null;
+    } catch {
+      return null;
+    }
+  }
+
+  private getDummyHash(): Promise<string> {
+    this.dummyHash ??= argon2.hash(randomUUID());
+    return this.dummyHash;
   }
 }
